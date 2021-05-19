@@ -1,0 +1,28 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: vault-certs
+  namespace: vault
+spec:
+  ca: 
+    secretName: vault-ca-pair
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: vault-certs
+  namespace: vault
+spec:
+  dnsNames:
+    - "*.prod.zaius"
+    - vault.vault.svc.cluster.local
+    - vault-0
+    - vault-1
+    - vault-2
+    - vault-3
+    - vault-4
+  ipAddresses:
+    - 127.0.0.1
+  secretName: vault-certs
+  issuerRef:
+    name:  vault-certs

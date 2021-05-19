@@ -1,0 +1,148 @@
+---
+# Vault Helm Chart Value Overrides
+global:
+  enabled: true
+  tlsDisable: false
+
+injector:
+  enabled: true
+  # Use the Vault K8s Image https://github.com/hashicorp/vault-k8s/
+  image:
+    repository: "hashicorp/vault-k8s"
+    tag: "latest"
+
+  resources:
+      requests:
+        memory: 256Mi
+        cpu: 250m
+      limits:
+        memory: 256Mi
+        cpu: 250m
+
+server:
+  service:
+    enabled: true
+
+  dataStorage:
+    enabled: true
+    size: 20Gi
+    storageClass: null
+    accessMode: ReadWriteOnce
+
+  auditStorage:
+    enabled: true
+    size: 20Gi
+    storageClass: null
+    accessMode: ReadWriteOnce
+
+  image:
+    repository: "hashicorp/vault"
+    tag: ${helm_app_version}
+
+  # These Resource Limits are in line with node requirements in the
+  # Vault Reference Architecture for a Small Cluster
+  resources:
+    requests:
+      memory: 8Gi
+      cpu: 2000m
+    limits:
+      memory: 16Gi
+      cpu: 2000m
+
+  # For HA configuration and because we need to manually init the vault,
+  # we need to define custom readiness/liveness Probe settings
+  readinessProbe:
+    path: "/v1/sys/health?standbyok=true"
+    port: 8200
+  livenessProbe:
+    path: "/v1/sys/health?standbyok=true"
+    port: 8200
+    initialDelaySeconds: 60
+    periodSeconds: 3
+    successThreshold: 1
+    timeoutSeconds: 5
+
+  # extraVolumes is a list of extra volumes to mount. These will be exposed
+  # to Vault in the path `/vault/userconfig/<name>/`.
+  extraVolumes:
+    - type: secret
+      name: vault-ca-pair
+    - type: secret
+      name: vault-certs
+
+  extraEnvironmentVars:
+%{ for key, value in helm_extra_values ~}
+    ${key}: ${value}
+%{ endfor ~}
+
+  hostNetwork: true
+  extraSecretEnvironmentVars: {}
+  standalone:
+    enabled: false
+
+  # Run Vault in "HA" mode.
+  ha:
+    enabled: true
+    replicas: 5
+    bootstrapExpect: 5
+  # Looping over
+    serviceAccount:
+%{ for key, value in ha_sa ~}
+      ${key}: "${value}"
+%{ endfor ~}
+    raft:
+      enabled: true
+      setNodeId: true
+      config: |
+        ui = true
+        disable_mlock = true
+        tlsDisable = false
+        listener "tcp" {
+          tls_disable = false
+          tls_ca_cert_file = "/vault/userconfig/vault-ca-pair/tls.crt"
+          tls_cert_file = "/vault/userconfig/vault-certs/tls.crt"
+          tls_key_file = "/vault/userconfig/vault-certs/tls.key"
+        }
+
+        seal "awskms" {}
+        
+        storage "raft" {
+          path = "/vault/data"
+          retry_join {
+            leader_api_addr = "https://vault-0.vault-internal:8200"
+            leader_ca_cert_file = "/vault/userconfig/vault-ca-pair/tls.crt"
+            leader_client_cert_file = "/vault/userconfig/vault-certs/tls.crt"
+            leader_client_key_file = "/vault/userconfig/vault-certs/tls.key"
+          }
+          retry_join {
+            leader_api_addr = "https://vault-1.vault-internal:8200"
+            leader_ca_cert_file = "/vault/userconfig/vault-ca-pair/tls.crt"
+            leader_client_cert_file = "/vault/userconfig/vault-certs/tls.crt"
+            leader_client_key_file = "/vault/userconfig/vault-certs/tls.key"          
+          }
+          retry_join {
+            leader_api_addr = "https://vault-2.vault-internal:8200"
+            leader_ca_cert_file = "/vault/userconfig/vault-ca-pair/tls.crt"
+            leader_client_cert_file = "/vault/userconfig/vault-certs/tls.crt"
+            leader_client_key_file = "/vault/userconfig/vault-certs/tls.key"          
+          }
+          retry_join {
+            leader_api_addr = "https://vault-3.vault-internal:8200"
+            leader_ca_cert_file = "/vault/userconfig/vault-ca-pair/tls.crt"
+            leader_client_cert_file = "/vault/userconfig/vault-certs/tls.crt"
+            leader_client_key_file = "/vault/userconfig/vault-certs/tls.key"          
+          }
+          retry_join {
+            leader_api_addr = "https://vault-4.vault-internal:8200"
+            leader_ca_cert_file = "/vault/userconfig/vault-ca-pair/tls.crt"
+            leader_client_cert_file = "/vault/userconfig/vault-certs/tls.crt"
+            leader_client_key_file = "/vault/userconfig/vault-certs/tls.key"          
+          }
+
+        }
+
+        service_registration "kubernetes" {}
+
+# Vault UI
+ui:
+  enabled: true

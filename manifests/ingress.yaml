@@ -1,0 +1,39 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: vault-gateway
+  namespace: vault
+spec:
+  selector:
+    istio: internal-ingressgateway 
+  servers:
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    tls:
+      mode: PASSTHROUGH
+      credentialName: vault-certs
+    hosts:
+    - vault.prod.zaius
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: vault
+  namespace: vault
+spec:
+  hosts: 
+  - vault.prod.zaius 
+  gateways:
+  - vault-gateway
+  tls:
+  - match:
+    - port: 443
+      sniHosts:
+      - vault.prod.zaius
+    route:
+    - destination:
+        host: vault.vault.svc.cluster.local
+        port:
+          number: 8200
