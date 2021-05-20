@@ -30,34 +30,11 @@ resource "aws_iam_role_policy" "vault_iam" {
         {
             "Effect": "Allow",
             "Action": [
-                "ec2:DescribeInstances",
-                "iam:GetInstanceProfile",
-                "iam:GetUser",
-                "iam:GetRole"
-            ],
-            "Resource": "*"
-        },
-        {
-            "Effect": "Allow",
-            "Action": [
                 "sts:AssumeRole"
             ],
             "Resource": [
                 "arn:aws:iam::${local.account}:role/${local.k8s_role}"
             ]
-        },
-        {
-            "Sid": "ManageOwnAccessKeys",
-            "Effect": "Allow",
-            "Action": [
-                "iam:CreateAccessKey",
-                "iam:DeleteAccessKey",
-                "iam:GetAccessKeyLastUsed",
-                "iam:GetUser",
-                "iam:ListAccessKeys",
-                "iam:UpdateAccessKey"
-            ],
-            "Resource": "arn:aws:iam::*:user/$${aws:username}"
         }
     ]
 }
