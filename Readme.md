@@ -2,19 +2,18 @@
 
 - [Create Private CA:](https://www.notion.so/Kubernetes-cert-manager-8e346053ee894d2cbe33b934a809c240)
 
-## Links:
-        - [Vault HA with Raft - examples](https://www.vaultproject.io/docs/platform/k8s/helm/examples/ha-with-raft)
-        - [Vault HA with Raft](https://www.vaultproject.io/docs/platform/k8s/helm/examples/ha-with-raft)
-
-## Reference Links:
+### Links:
+- [Vault HA with Raft - examples](https://www.vaultproject.io/docs/platform/k8s/helm/examples/ha-with-raft)
+- [Vault HA with Raft](https://www.vaultproject.io/docs/platform/k8s/helm/examples/ha-with-raft)
 - https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html
 - https://www.vaultproject.io/docs/configuration/storage/raft
 - https://learn.hashicorp.com/tutorials/vault/raft-ha-storage?in=vault/raft
 - https://learn.hashicorp.com/tutorials/vault/ha-with-consul
 - https://www.youtube.com/watch?v=Eapf-OWbKH8&ab_channel=ThatDevOpsGuy
+- [Ha with Raft](https://www.vaultproject.io/docs/platform/k8s/helm/examples/ha-with-raft)
 
 
-## Initialize and unseal vault-0 pod:
+#### Initialize and unseal vault-0 pod:
 
 ```
         NS=vault-odp
@@ -34,9 +33,7 @@
         securely distribute the key shares printed above.
 ```
 
-#### Unseal all other nodes and join the raft
-
-[Ha with Raft](https://www.vaultproject.io/docs/platform/k8s/helm/examples/ha-with-raft): 
+#### Unseal the cluster:
 
 ```
         CMD="vault operator unseal"
@@ -47,3 +44,4 @@
 ```bash
         vault operator raft list-peers
 ```
+
